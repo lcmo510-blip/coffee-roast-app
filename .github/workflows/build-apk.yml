@@ -14,21 +14,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
+      - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '17'
 
-      - name: Setup Gradle 8.7
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.7'
 
-      - name: Extract Android project
+      - name: Find and extract Android project
         run: |
+          ZIP_FILE=$(find . -maxdepth 1 -type f -name "coffee_roast_android_v5_3*.zip" | head -1)
+          if [ -z "$ZIP_FILE" ]; then
+            echo "V5.3 ZIP not found"
+            exit 1
+          fi
+          echo "Using $ZIP_FILE"
+          rm -rf android_project
           mkdir android_project
-          unzip -q coffee_roast_android_v5_2_github.zip -d android_project
+          unzip -q "$ZIP_FILE" -d android_project
 
       - name: Build APK
         run: gradle -p android_project :app:assembleDebug
@@ -36,5 +43,5 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: coffee-roast-v5.2-apk
+          name: coffee-roast-v5.3-apk
           path: android_project/app/build/outputs/apk/debug/app-debug.apk
