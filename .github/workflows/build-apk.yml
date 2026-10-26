@@ -27,7 +27,7 @@ jobs:
 
       - name: Find and extract Android project
         run: |
-          ZIP_FILE=$(find . -maxdepth 1 -type f -name "coffee_roast_android_v5_3*.zip" | head -1)
+          ZIP_FILE="./coffee_roast_android_v5_3_1_startup_test.zip"
           if [ -z "$ZIP_FILE" ]; then
             echo "V5.3 ZIP not found"
             exit 1
