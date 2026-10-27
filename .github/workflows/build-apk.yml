@@ -28,7 +28,7 @@ jobs:
       - name: Extract Android project
         shell: bash
         run: |
-          ZIP_FILE="./CoffeeRoast_V5.4_FULL_PROJECT.zip"
+          ZIP_FILE="./CoffeeRoast_V5.4.1_STARTUP_FIX.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
             echo "ERROR: ZIP file not found"
@@ -76,12 +76,12 @@ jobs:
             exit 1
           fi
 
-          cp "$APK" CoffeeRoast_V5.4.apk
-          echo "APK ready: CoffeeRoast_V5.4.apk"
+          cp "$APK" CoffeeRoast_V5.4.1.apk
+          echo "APK ready: CoffeeRoast_V5.4.1.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: CoffeeRoast-V5.4-APK
-          path: CoffeeRoast_V5.4.apk
+          name: CoffeeRoast-V5.4.1-APK
+          path: CoffeeRoast_V5.4.1.apk
           if-no-files-found: error
