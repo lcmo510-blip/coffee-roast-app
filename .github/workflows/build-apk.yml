@@ -28,7 +28,7 @@ jobs:
       - name: Extract Android project
         shell: bash
         run: |
-          ZIP_FILE="./CoffeeRoast_V5.4.6_BACK_EXIT_FIX.zip"
+          ZIP_FILE="./CoffeeRoast_V5.4.7_CURVE_SAVE_SHARE_FIX.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
             echo "ERROR: ZIP file not found"
@@ -128,7 +128,7 @@ jobs:
             --ks-key-alias "$KEY_ALIAS" \
             --ks-pass pass:"$KEYSTORE_PASSWORD" \
             --key-pass pass:"$KEYSTORE_PASSWORD" \
-            --out CoffeeRoast_V5.4.6.apk \
+            --out CoffeeRoast_V5.4.7.apk \
             "$APK"
 
       - name: Verify APK signature
@@ -143,13 +143,13 @@ jobs:
           "$BUILD_TOOLS/apksigner" verify \
             --verbose \
             --print-certs \
-            CoffeeRoast_V5.4.6.apk
+            CoffeeRoast_V5.4.7.apk
 
-          echo "V5.4.6 signature verification PASSED"
+          echo "V5.4.7 signature verification PASSED"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: CoffeeRoast-V5.4.6-SIGNED-APK
-          path: CoffeeRoast_V5.4.6.apk
+          name: CoffeeRoast-V5.4.7-SIGNED-APK
+          path: CoffeeRoast_V5.4.7.apk
           if-no-files-found: error
