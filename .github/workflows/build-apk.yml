@@ -28,7 +28,7 @@ jobs:
       - name: Extract Android project
         shell: bash
         run: |
-          ZIP_FILE="./CoffeeRoast_V5.4.8_CURVE_BRIDGE_SYNC_FIX.zip"
+          ZIP_FILE="./CoffeeRoast_V5.4.9_HISTORY_CURVE_CALLBACK_FIX.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
             echo "ERROR: ZIP file not found"
@@ -84,7 +84,6 @@ jobs:
 
           echo "$KEYSTORE_BASE64" | base64 --decode > coffee-roast-release.jks
 
-          echo "Checking keystore..."
           keytool -list \
             -keystore coffee-roast-release.jks \
             -storepass "$KEYSTORE_PASSWORD"
@@ -101,8 +100,6 @@ jobs:
             echo "ERROR: Could not determine key alias"
             exit 1
           fi
-
-          echo "Key alias found: $KEY_ALIAS"
 
           APK=$(find "$PROJECT_DIR/app/build/outputs/apk/debug" \
             -type f -name "*.apk" | head -n 1)
@@ -126,7 +123,7 @@ jobs:
             --ks-key-alias "$KEY_ALIAS" \
             --ks-pass pass:"$KEYSTORE_PASSWORD" \
             --key-pass pass:"$KEYSTORE_PASSWORD" \
-            --out CoffeeRoast_V5.4.8.apk \
+            --out CoffeeRoast_V5.4.9.apk \
             "$APK"
 
       - name: Verify APK signature
@@ -139,13 +136,13 @@ jobs:
           "$BUILD_TOOLS/apksigner" verify \
             --verbose \
             --print-certs \
-            CoffeeRoast_V5.4.8.apk
+            CoffeeRoast_V5.4.9.apk
 
-          echo "V5.4.8 signature verification PASSED"
+          echo "V5.4.9 signature verification PASSED"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: CoffeeRoast-V5.4.8-SIGNED-APK
-          path: CoffeeRoast_V5.4.8.apk
+          name: CoffeeRoast-V5.4.9-SIGNED-APK
+          path: CoffeeRoast_V5.4.9.apk
           if-no-files-found: error
