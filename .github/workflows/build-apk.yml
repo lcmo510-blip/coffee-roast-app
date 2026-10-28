@@ -66,22 +66,90 @@ jobs:
           echo "Building from: $PROJECT_DIR"
           gradle -p "$PROJECT_DIR" :app:assembleDebug
 
-      - name: Prepare APK
+      - name: Sign APK with permanent key
         shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
         run: |
-          APK=$(find "$PROJECT_DIR/app/build/outputs/apk/debug" -type f -name "*.apk" | head -n 1)
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "ERROR: KEYSTORE_BASE64 secret is empty"
+            exit 1
+          fi
+
+          if [ -z "$KEYSTORE_PASSWORD" ]; then
+            echo "ERROR: KEYSTORE_PASSWORD secret is empty"
+            exit 1
+          fi
+
+          echo "$KEYSTORE_BASE64" | base64 --decode > coffee-roast-release.jks
+
+          echo "Checking keystore..."
+          keytool -list \
+            -keystore coffee-roast-release.jks \
+            -storepass "$KEYSTORE_PASSWORD"
+
+          KEY_ALIAS=$(keytool -list \
+            -keystore coffee-roast-release.jks \
+            -storepass "$KEYSTORE_PASSWORD" 2>/dev/null \
+            | grep -E 'PrivateKeyEntry|private key entry' \
+            | head -n 1 \
+            | cut -d',' -f1 \
+            | xargs)
+
+          if [ -z "$KEY_ALIAS" ]; then
+            echo "ERROR: Could not determine key alias"
+            exit 1
+          fi
+
+          echo "Key alias found: $KEY_ALIAS"
+
+          APK=$(find "$PROJECT_DIR/app/build/outputs/apk/debug" \
+            -type f -name "*.apk" | head -n 1)
 
           if [ -z "$APK" ]; then
             echo "ERROR: APK not found"
             exit 1
           fi
 
-          cp "$APK" CoffeeRoast_V5.4.5.apk
-          echo "APK ready: CoffeeRoast_V5.4.5.apk"
+          BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" \
+            -mindepth 1 -maxdepth 1 -type d \
+            | sort -V | tail -n 1)
+
+          if [ -z "$BUILD_TOOLS" ]; then
+            echo "ERROR: Android build-tools not found"
+            exit 1
+          fi
+
+          echo "Using build tools: $BUILD_TOOLS"
+
+          "$BUILD_TOOLS/apksigner" sign \
+            --ks coffee-roast-release.jks \
+            --ks-key-alias "$KEY_ALIAS" \
+            --ks-pass pass:"$KEYSTORE_PASSWORD" \
+            --key-pass pass:"$KEYSTORE_PASSWORD" \
+            --out CoffeeRoast_V5.4.5.apk \
+            "$APK"
+
+      - name: Verify APK signature
+        shell: bash
+        run: |
+          BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" \
+            -mindepth 1 -maxdepth 1 -type d \
+            | sort -V | tail -n 1)
+
+          echo "Verifying APK signature..."
+
+          "$BUILD_TOOLS/apksigner" verify \
+            --verbose \
+            --print-certs \
+            CoffeeRoast_V5.4.5.apk
+
+          echo "V5.4.5 signature verification PASSED"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: CoffeeRoast-V5.4.5-APK
+          name: CoffeeRoast-V5.4.5-SIGNED-APK
           path: CoffeeRoast_V5.4.5.apk
           if-no-files-found: error
