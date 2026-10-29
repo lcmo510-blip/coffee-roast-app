@@ -28,7 +28,7 @@ jobs:
       - name: Extract Android project
         shell: bash
         run: |
-          ZIP_FILE="./CoffeeRoast_V5.4.19_DELETE_INDEX_FIX.zip"
+          ZIP_FILE="./CoffeeRoast_V5.4.20_DELETE_EVENT_FIX.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
             echo "ERROR: ZIP file not found"
@@ -100,46 +100,4 @@ jobs:
           APK=$(find "$PROJECT_DIR/app/build/outputs/apk/debug" \
             -type f -name "*.apk" | head -n 1)
 
-          if [ -z "$APK" ]; then
-            echo "ERROR: APK not found"
-            exit 1
-          fi
-
-          BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" \
-            -mindepth 1 -maxdepth 1 -type d \
-            | sort -V | tail -n 1)
-
-          if [ -z "$BUILD_TOOLS" ]; then
-            echo "ERROR: Android build-tools not found"
-            exit 1
-          fi
-
-          "$BUILD_TOOLS/apksigner" sign \
-            --ks coffee-roast-release.jks \
-            --ks-key-alias "$KEY_ALIAS" \
-            --ks-pass pass:"$KEYSTORE_PASSWORD" \
-            --key-pass pass:"$KEYSTORE_PASSWORD" \
-            --out CoffeeRoast_V5.4.19.apk \
-            "$APK"
-
-      - name: Verify APK signature
-        shell: bash
-        run: |
-          BUILD_TOOLS=$(find "$ANDROID_HOME/build-tools" \
-            -mindepth 1 -maxdepth 1 -type d \
-            | sort -V | tail -n 1)
-
-          "$BUILD_TOOLS/apksigner" verify \
-            --verbose \
-            --print-certs \
-            CoffeeRoast_V5.4.19.apk
-
-          echo "V5.4.19 signature verification PASSED"
-
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: CoffeeRoast-V5.4.19-SIGNED-APK
-          path: CoffeeRoast_V5.4.19.apk
-          if-no-files-found: error
-          retention-days: 30
+          if [ -z "$APK
