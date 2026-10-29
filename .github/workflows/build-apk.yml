@@ -28,7 +28,7 @@ jobs:
       - name: Extract Android project
         shell: bash
         run: |
-          ZIP_FILE="./CoffeeRoast_V5.4.21_DELETE_DIAGNOSTIC.zip"
+          ZIP_FILE="./CoffeeRoast_V5.4.22_WEBCHROME_DELETE_FIX.zip"
 
           if [ ! -f "$ZIP_FILE" ]; then
             echo "ERROR: ZIP file not found"
@@ -109,12 +109,17 @@ jobs:
             -mindepth 1 -maxdepth 1 -type d \
             | sort -V | tail -n 1)
 
+          if [ -z "$BUILD_TOOLS" ]; then
+            echo "ERROR: Android build-tools not found"
+            exit 1
+          fi
+
           "$BUILD_TOOLS/apksigner" sign \
             --ks coffee-roast-release.jks \
             --ks-key-alias "$KEY_ALIAS" \
             --ks-pass pass:"$KEYSTORE_PASSWORD" \
             --key-pass pass:"$KEYSTORE_PASSWORD" \
-            --out CoffeeRoast_V5.4.21.apk \
+            --out CoffeeRoast_V5.4.22.apk \
             "$APK"
 
       - name: Verify APK signature
@@ -127,14 +132,14 @@ jobs:
           "$BUILD_TOOLS/apksigner" verify \
             --verbose \
             --print-certs \
-            CoffeeRoast_V5.4.21.apk
+            CoffeeRoast_V5.4.22.apk
 
-          echo "V5.4.21 signature verification PASSED"
+          echo "V5.4.22 signature verification PASSED"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: CoffeeRoast-V5.4.21-DIAGNOSTIC-APK
-          path: CoffeeRoast_V5.4.21.apk
+          name: CoffeeRoast-V5.4.22-SIGNED-APK
+          path: CoffeeRoast_V5.4.22.apk
           if-no-files-found: error
           retention-days: 30
