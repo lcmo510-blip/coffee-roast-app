@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>烘豆記錄 Web V5.4.25</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#7a4d2d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="烘豆記錄">
+<meta name="description" content="咖啡烘焙資料、曲線、關鍵點與歷史批次記錄工具">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{--bg:#f5f1e8;--card:#fffdf8;--ink:#2f261f;--muted:#766a60;--accent:#7a4d2d;--line:#dccfc1;--good:#466b50}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Noto Sans TC",sans-serif}
+header{position:sticky;top:0;z-index:10;background:#2f261f;color:white;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 12px;display:flex;align-items:center;justify-content:space-between}
+header b{font-size:18px}.tabs{display:flex;gap:6px;align-items:center}.tabs button{border:0;border-radius:18px;padding:8px 12px;background:#59483c;color:white}.tabs .exitBtn{background:#7d342f;padding:8px 12px;min-width:58px;align-self:stretch}.tabs button.on{background:#c99563;color:#241b15}
+main{max-width:780px;margin:auto;padding:12px 12px calc(12px + env(safe-area-inset-bottom,0px))}.page{display:none}.page.on{display:block}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px #0000000b}
+h2,h3{margin:0 0 10px}label{display:block;font-size:13px;color:var(--muted);margin:8px 0 4px}
+input,select,button{font:inherit}input,select{width:100%;padding:11px;border:1px solid #cdbfb1;border-radius:10px;background:white}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.timerCard{position:sticky;top:var(--header-h,86px);z-index:9;box-shadow:0 4px 12px #0002;padding:9px 12px}.timer{text-align:center;font-size:48px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:1px;line-height:1.05}.controls{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:7px}.controls .btn{padding:9px 8px}.btn{border:0;border-radius:12px;padding:12px 8px;background:#e7ddd1;color:#33271f;font-weight:700}.btn.primary{background:var(--accent);color:white}.btn.stop{background:#4d3d35;color:white}
+.marks{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.mark{border:1px solid #c9b7a6;background:white;border-radius:12px;padding:10px 3px;font-size:13px}.mark.hit{background:#dce8de;border-color:#8eaa93}
+#recordScroll{height:158px;overflow-y:auto;overscroll-behavior:contain}.recordHead,.row{display:grid;grid-template-columns:1.1fr 1fr 1fr 1fr 1fr;gap:5px;align-items:center}.recordHead{font-size:12px;color:var(--muted);padding:0 3px 6px}.row{padding:6px 0;border-top:1px solid #eee2d6}.row input{padding:8px 5px;text-align:center}.delta{text-align:center;font-weight:700;font-size:13px}
+canvas{width:100%;height:280px;background:white;border-radius:12px;border:1px solid #e0d5ca}
+.small{font-size:12px;color:var(--muted)}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:#f2eadf;border-radius:12px;padding:10px;text-align:center}.stat b{display:block;font-size:17px}.phasebar{display:flex;height:18px;border-radius:9px;overflow:hidden;background:#eee;margin-top:10px}.phasebar span{display:block;height:100%;width:0;transition:width .25s}.phaseDry{background:#d8b36a}.phaseMai{background:#a87545}.phaseDev{background:#6f4630}.phaseLegend{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:11px;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:8px}.actions button{border:0;border-radius:10px;padding:10px 12px;background:#ded1c3}
+.compareItem,.batchItem{display:flex;gap:8px;align-items:center;margin:7px 0}.compareItem input,.batchItem input{width:auto}.batchTools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.miniBtn{border:0;border-radius:9px;padding:8px 10px;background:#ded1c3}.danger{background:#8d3d38;color:white}.rorCtl{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px}.rorCtl label{margin:0;display:flex;align-items:center;gap:6px}.rorCtl input{width:auto}.rorNow{font-weight:800;color:#6a1b9a}.refCtl{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin-top:10px}.refCtl label{margin:0}.refStatus{margin-top:8px;padding:9px 10px;background:#f2eadf;border-radius:10px;font-size:12px}.refDelta{font-weight:800}.refLegend{display:inline-block;width:22px;border-top:3px dashed #00838f;vertical-align:middle;margin:0 4px}.tasteScale{display:flex;gap:7px;flex-wrap:wrap;margin-top:6px}.tasteBtn{border:1px solid #cdbfb1;background:white;border-radius:10px;padding:8px 11px;min-width:42px}.tasteBtn.on{background:#7a4d2d;color:white;border-color:#7a4d2d}.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:7px}.chip{border:1px solid #cdbfb1;background:white;border-radius:18px;padding:7px 10px;font-size:13px}.chip.on{background:#dce8de;border-color:#8eaa93;color:#294631}.noteArea{width:100%;min-height:82px;padding:10px;border:1px solid #cdbfb1;border-radius:10px;background:white;font:inherit;resize:vertical}.favoriteCtl{display:flex;align-items:center;gap:8px;margin-top:10px}.favoriteCtl input{width:auto}.resultHint{background:#f2eadf;border-radius:10px;padding:9px 10px;margin-top:9px;font-size:12px;color:var(--muted)}.titleRow{display:flex;align-items:center;justify-content:space-between;gap:10px}.titleRow h2{margin:0}.historyBtn{border:0;border-radius:10px;padding:8px 11px;background:#ded1c3;color:var(--ink);font-weight:700}.scroll5{max-height:185px;overflow-y:auto;overscroll-behavior:contain;padding-right:3px}.saveNavBox{border:1px solid var(--line);background:#f7f0e7;border-radius:12px;padding:10px;display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.saveNavBox button{flex:1;min-width:145px;border:0;border-radius:10px;padding:11px 12px;font-weight:700}.saveNavBox #save{background:var(--accent);color:white}.saveNavBox #back{background:#ded1c3;color:var(--ink)}.modal{position:fixed;inset:0;z-index:100;background:#0008;display:none;align-items:center;justify-content:center;padding:18px}.modal.on{display:flex}.modalBox{width:min(520px,100%);max-height:88vh;overflow:auto;background:var(--card);border-radius:16px;padding:16px;box-shadow:0 12px 36px #0005}.modalHead{display:flex;align-items:center;justify-content:space-between;gap:10px}.modalHead h3{margin:0}.modalClose{border:0;background:#e7ddd1;border-radius:9px;padding:7px 10px}.historyDbTools{display:grid;grid-template-columns:1.5fr 1fr;gap:8px;margin:10px 0}.historyDbTools input,.historyDbTools select{margin:0}.historyDbList{max-height:240px;overflow-y:auto;border:1px solid var(--line);border-radius:12px;background:white}.historyDbItem{padding:10px;border-bottom:1px solid #eee2d6;cursor:pointer}.historyDbItem:last-child{border-bottom:0}.historyDbItem.on{background:#f2eadf}.historyDbItem b{display:block;color:var(--ink)}.detailBox{margin-top:10px;padding:12px;background:#f7f0e7;border-radius:12px}.detailGrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:13px}.detailGrid span{color:var(--muted)}.detailActions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.detailActions button{border:0;border-radius:9px;padding:8px 10px;background:#ded1c3}.detailActions .primary{background:var(--accent);color:white}.detailActions .danger{background:#8d3d38;color:white}.sameBeanBtn{margin-top:8px;border:0;border-radius:9px;padding:8px 10px;background:#dce8de;color:#294631;font-weight:700}.shareTools{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.shareTools button{flex:1;min-width:140px;border:0;border-radius:10px;padding:10px 12px;font-weight:700}.shareTools .imageSave{background:#ded1c3;color:var(--ink)}.shareTools .imageShare{background:#466b50;color:white}.editBar{display:flex;justify-content:flex-end;margin:-4px 0 8px}.editBtn{border:0;border-radius:9px;padding:7px 10px;background:#ded1c3;font-weight:700}.editBtn.on{background:#7a4d2d;color:white}.row.editing{background:#fff8e8}.markEdit{display:none;margin-top:6px;border:0;border-radius:8px;padding:5px 7px;background:#ded1c3;font-size:11px}.marks.editing .markEdit{display:inline-block}.historyDbTools select{max-height:220px}.compareItem{padding:8px;border-radius:10px;transition:background .15s}.compareItem.c1{background:#ffdddd}.compareItem.c2{background:#dcecff}.compareItem.c3{background:#dff1df}.compareItem.c4{background:#ffe7d2}.markTempBox{display:grid;gap:10px}.markTempBox input{font-size:22px;text-align:center}.exitNote{font-size:12px;color:var(--muted);margin-top:8px}
+@media(max-width:520px){main{padding:6px}.card{padding:10px;margin-bottom:8px}.timerCard{padding:7px 10px}.timer{font-size:46px}.controls .btn{padding:8px 5px}.roast-record-card h3{margin-bottom:6px}#recordScroll{height:158px}.marks{grid-template-columns:repeat(5,1fr)}.mark{font-size:12px;padding:10px 1px}.recordHead,.row{grid-template-columns:1.15fr .95fr .85fr .85fr 1fr}.row input{font-size:13px}.stats{grid-template-columns:1fr 1fr 1fr}}
+</style>
+</head>
+<body>
+<header><b>☕ 烘豆記錄 Web V5.4.25</b><div class="tabs"><button id="tabInfo" class="on">基本<br>資料</button><button id="tabRoast">烘焙<br>記錄</button><button id="exitApp" class="exitBtn" type="button">退出</button></div></header>
+<main>
+<section id="info" class="page on">
+ <div class="card"><div class="titleRow"><h2>基本資料</h2><button id="openHistory" class="historyBtn" type="button">帶入資料</button></div>
+  <label>烘焙日期</label><input id="date" type="date">
+  <label>生豆名稱</label><input id="bean" placeholder="例：衣索比亞 耶加雪菲">
+  <div class="grid2"><div><label>生豆重量 (g)</label><input id="green" type="number" inputmode="decimal"></div><div><label>熟豆重量 (g)</label><input id="roasted" type="number" inputmode="decimal"></div></div>
+  <div class="grid2"><div><label>失重率</label><input id="loss" readonly placeholder="自動計算"></div><div><label>入豆溫 (°C)</label><input id="chargeTemp" type="number" inputmode="decimal"></div></div>
+ </div>
+ <div class="card"><div class="titleRow"><h3>歷史資料</h3><button id="openHistoryDb" class="historyBtn" type="button">歷史資料</button></div><div id="batchList" class="small scroll5">尚無資料</div><div class="batchTools"><button id="deleteSelected" class="miniBtn danger" type="button">刪除勾選批次</button><button id="backupData" class="miniBtn">備份資料</button><button id="restoreData" class="miniBtn">還原資料</button><button id="export" class="miniBtn">匯出 CSV</button><input id="restoreFile" type="file" accept="application/json,.json" hidden></div></div>
+ <div class="actions"><button id="newBatch">新增批次</button><button id="goRoast" class="btn primary">進入烘焙記錄 →</button></div>
+</section>
+
+<section id="roast" class="page">
+ <div class="card timerCard" id="timerCard"><div class="timer" id="timer">00:00</div><div class="controls"><button class="btn primary" id="start">開始</button><button class="btn" id="pause">暫停</button></div></div>
+ <div class="card roast-record-card"><div class="titleRow"><h3>烘焙紀錄（3 筆顯示區）</h3><button id="editRecords" class="editBtn" type="button">修正</button></div><div class="recordHead"><span>時間</span><span>豆溫°C</span><span>火力</span><span>風力</span><span>溫差/分</span></div><div id="recordScroll"><div id="records"></div></div><div class="small">開始烘焙時第一筆為入豆溫；每 30 秒新增一筆。可上下捲動查看先前紀錄；火力、風力未修改時沿用前一筆。</div></div>
+ <div class="card"><div class="titleRow"><h3>關鍵點</h3><button id="editMarks" class="editBtn" type="button">修正</button></div><div class="marks" id="marksBox">
+  <button class="mark" data-key="turn">回溫點<span class="markEdit">修改</span></button><button class="mark" data-key="yellow">轉黃點</button><button class="mark" data-key="fc">一爆開始</button><button class="mark" data-key="sc">二爆開始</button><button class="mark" data-key="drop">下豆<span class="markEdit">修改</span></button>
+ </div><div id="markInfo" class="small" style="margin-top:8px">點擊按鍵會記錄當下時間，並詢問豆溫。</div></div>
+ <div class="card"><h3>烘焙曲線</h3><canvas id="chart"></canvas><div class="rorCtl"><label><input id="showRor" type="checkbox" checked> 顯示 RoR（紫色虛線）</label><span>即時 RoR：<b id="rorNow" class="rorNow">--</b></span></div><div class="small">豆溫：棕色｜RoR：紫色虛線（3點平滑）；比較批次依序使用紅、藍、綠、橘（最多4批）。</div><div class="shareTools"><button id="saveCurveImage" class="imageSave" type="button">儲存曲線圖片</button><button id="shareCurveImage" class="imageShare" type="button">分享曲線圖片</button></div></div>
+ <div class="card"><h3>烘焙階段分析</h3><div class="stats"><div class="stat">乾燥期<b id="dry">--</b><span id="dryP">--</span></div><div class="stat">梅納反應期<b id="mai">--</b><span id="maiP">--</span></div><div class="stat">發展期 DTR<b id="dev">--</b><span id="devP">--</span></div></div><div class="phasebar" aria-label="烘焙階段比例"><span id="phaseDry" class="phaseDry"></span><span id="phaseMai" class="phaseMai"></span><span id="phaseDev" class="phaseDev"></span></div><div class="phaseLegend"><span>入豆 → 轉黃</span><span>轉黃 → 一爆</span><span>一爆 → 下豆</span></div></div>
+ <div class="card"><h3>烘焙成果・飲用感受</h3>
+  <div class="grid2"><div><label>烘焙度</label><select id="roastLevel"><option value="">未選擇</option><option>淺焙</option><option>中淺焙</option><option>中焙</option><option>中深焙</option><option>深焙</option></select></div><div><label>整體喜好度</label><div id="likingScale" class="tasteScale"><button type="button" class="tasteBtn" data-v="1">1</button><button type="button" class="tasteBtn" data-v="2">2</button><button type="button" class="tasteBtn" data-v="3">3</button><button type="button" class="tasteBtn" data-v="4">4</button><button type="button" class="tasteBtn" data-v="5">5</button></div></div></div>
+  <label>喝起來的感覺（可複選）</label><div id="flavorChips" class="chips"><button type="button" class="chip">花香</button><button type="button" class="chip">水果</button><button type="button" class="chip">柑橘</button><button type="button" class="chip">莓果</button><button type="button" class="chip">堅果</button><button type="button" class="chip">巧克力</button><button type="button" class="chip">焦糖</button><button type="button" class="chip">茶感</button><button type="button" class="chip">甜感佳</button><button type="button" class="chip">酸感明亮</button><button type="button" class="chip">醇厚</button><button type="button" class="chip">乾淨</button></div>
+  <label>飲用心得／下次調整</label><textarea id="tasteNote" class="noteArea" placeholder="例：甜感不錯；下次一爆後提早 15 秒下豆。"></textarea>
+  <label class="favoriteCtl"><input id="favorite" type="checkbox"> ⭐ 收藏為喜歡的批次</label>
+  <div class="resultHint">這裡不是專業杯測評分，重點是記下「自己喝起來的感覺」，方便日後找出最喜歡的烘焙方式。</div>
+  <div class="saveNavBox"><button id="save">儲存本批完整紀錄</button><button id="back">← 返回基本資料</button></div>
+ </div>
+ <div class="card"><h3>參考曲線</h3><div class="refCtl"><label>選擇歷史資料<select id="referenceBatch"><option value="">不使用參考曲線</option></select></label><button id="clearReference" class="miniBtn">清除</button></div><div id="referenceStatus" class="refStatus">尚未設定參考批次。</div><div class="small" style="margin-top:7px"><span class="refLegend"></span>參考曲線使用藍綠色虛線；烘焙中會顯示目前豆溫與參考曲線的溫差。</div></div>
+ <div class="card"><h3>批次曲線比較</h3><div id="compareList" class="small scroll5">先儲存歷史資料後即可疊加比較。</div></div>
+</section>
+</main>
+<div id="historyDbModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="historyDbTitle">
+ <div class="modalBox">
+  <div class="modalHead"><h3 id="historyDbTitle">歷史資料</h3><button id="closeHistoryDb" class="modalClose" type="button">關閉</button></div>
+  <div class="historyDbTools"><select id="historySearch"><option value="">請選擇歷史資料</option></select><select id="historyFilter"><option value="all">全部批次</option><option value="favorite">⭐ 收藏</option><option value="like4">喜好 4–5 分</option><option value="light">淺焙／中淺焙</option><option value="medium">中焙</option><option value="dark">中深焙／深焙</option></select></div>
+  <div class="small">清單維持約 5 筆高度，可上下滑動；點選批次查看完整摘要。</div>
+  <div id="historyDbList" class="historyDbList" style="margin-top:8px"></div>
+  <div id="historyDbDetail" class="detailBox"><span class="small">請先選擇一個歷史批次。</span></div>
+ </div>
+</div>
+<div id="historyModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+ <div class="modalBox">
+  <div class="modalHead"><h3 id="historyTitle">帶入歷史資料</h3><button id="closeHistory" class="modalClose" type="button">關閉</button></div>
+  <label>選擇歷史資料</label><select id="loadHistory"><option value="">請選擇批次</option></select>
+  <label>帶入內容</label><select id="loadScope"><option value="all">全部帶入</option><option value="basic">基本資料</option><option value="roast">烘焙記錄</option><option value="result">烘焙成果</option></select>
+  <div class="actions" style="margin-top:12px"><button id="loadHistoryBtn" class="btn primary">帶入選擇資料</button></div>
+  <div class="small" style="margin-top:8px">可選擇全部、基本資料、烘焙記錄或烘焙成果；帶入前會再次確認。</div>
+ </div>
+</div>
+
+<div id="markTempModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="markTempTitle"><div class="modalBox"><div class="modalHead"><h3 id="markTempTitle">輸入溫度</h3><button id="cancelMarkTemp" class="modalClose" type="button">取消</button></div><div class="markTempBox"><input id="markTempInput" type="number" step="0.1" inputmode="decimal" placeholder="溫度 °C（可留空）"><button id="confirmMarkTemp" class="btn primary" type="button">確認</button></div></div></div>
+<div id="exitModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="exitTitle">
+ <div class="modalBox">
+  <div class="modalHead"><h3 id="exitTitle">退出烘焙紀錄</h3></div>
+  <p id="exitMessage">確定要離開烘焙紀錄？</p>
+  <div class="actions" style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">
+   <button id="stayApp" class="btn" type="button">繼續使用</button>
+   <button id="saveAndExit" class="btn primary" type="button">儲存並離開</button>
+   <button id="discardAndExit" class="btn danger" type="button">放棄並離開</button>
+  </div>
+ </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const info=$('info'), roast=$('roast'), tabInfo=$('tabInfo'), tabRoast=$('tabRoast'),
+date=$('date'), bean=$('bean'), green=$('green'), roasted=$('roasted'), loss=$('loss'),
+chargeTemp=$('chargeTemp'), batchList=$('batchList'), newBatch=$('newBatch'), goRoast=$('goRoast'),
+timer=$('timer'), start=$('start'), pause=$('pause'), markInfo=$('markInfo'),
+records=$('records'), recordScroll=$('recordScroll'), chart=$('chart'), dry=$('dry'), dryP=$('dryP'), mai=$('mai'), maiP=$('maiP'),
+dev=$('dev'), devP=$('devP'), phaseDry=$('phaseDry'), phaseMai=$('phaseMai'), phaseDev=$('phaseDev'), compareList=$('compareList'), save=$('save'), exportBtn=$('export'), back=$('back'), deleteSelected=$('deleteSelected'), backupData=$('backupData'), restoreData=$('restoreData'), restoreFile=$('restoreFile'), showRor=$('showRor'), rorNow=$('rorNow'), referenceBatch=$('referenceBatch'), clearReference=$('clearReference'), referenceStatus=$('referenceStatus'), roastLevel=$('roastLevel'), likingScale=$('likingScale'), flavorChips=$('flavorChips'), tasteNote=$('tasteNote'), favorite=$('favorite'), loadHistory=$('loadHistory'), loadScope=$('loadScope'), loadHistoryBtn=$('loadHistoryBtn'), openHistory=$('openHistory'), closeHistory=$('closeHistory'), historyModal=$('historyModal'), openHistoryDb=$('openHistoryDb'), closeHistoryDb=$('closeHistoryDb'), historyDbModal=$('historyDbModal'), historySearch=$('historySearch'), historyFilter=$('historyFilter'), historyDbList=$('historyDbList'), historyDbDetail=$('historyDbDetail'), saveCurveImage=$('saveCurveImage'), shareCurveImage=$('shareCurveImage');
+const editRecords=$('editRecords'), editMarks=$('editMarks'), marksBox=$('marksBox');
+const markTempModal=$('markTempModal'),markTempTitle=$('markTempTitle'),markTempInput=$('markTempInput'),confirmMarkTemp=$('confirmMarkTemp'),cancelMarkTemp=$('cancelMarkTemp');
+const S={elapsed:0,running:false,lastStart:0,records:[],marks:{},timer:null,comp:new Set(),historySelected:null,referenceId:+localStorage.getItem('roastReferenceId')||null,liking:0,loadedHistory:false,loadedId:null,editRecords:false,editMarks:false,dropLocked:false,dirty:false,allowExit:false,roastStarted:false};
+const names={turn:'回溫點',yellow:'轉黃',fc:'一爆',sc:'二爆',drop:'下豆'};
+function syncStickyOffset(){const h=document.querySelector('header');if(h)document.documentElement.style.setProperty('--header-h',Math.ceil(h.getBoundingClientRect().height)+'px')}
+syncStickyOffset();addEventListener('resize',syncStickyOffset);setTimeout(syncStickyOffset,100);
+date.value=new Date().toISOString().slice(0,10);
+function page(p){info.classList.toggle('on',p==='info');roast.classList.toggle('on',p==='roast');tabInfo.classList.toggle('on',p==='info');tabRoast.classList.toggle('on',p==='roast');if(p==='roast')draw()}
+tabInfo.onclick=()=>page('info');tabRoast.onclick=()=>{renderBatches();page('roast')};goRoast.onclick=()=>page('roast');back.onclick=()=>page('info');
+openHistory.onclick=()=>{refreshHistorySelectors();historyModal.classList.add('on')};closeHistory.onclick=()=>historyModal.classList.remove('on');historyModal.onclick=e=>{if(e.target===historyModal)historyModal.classList.remove('on')};
+openHistoryDb.onclick=()=>{S.historySelected=null;refreshHistorySelectors();historySearch.value='';historyDbModal.classList.add('on');renderHistoryDb()};closeHistoryDb.onclick=()=>historyDbModal.classList.remove('on');historyDbModal.onclick=e=>{if(e.target===historyDbModal)historyDbModal.classList.remove('on')};historySearch.onchange=()=>{S.historySelected=historySearch.value||null;renderHistoryDb();renderHistoryDetail()};historyFilter.onchange=renderHistoryDb;
+function lossCalc(){let g=+green.value,r=+roasted.value;loss.value=g&&r?((g-r)/g*100).toFixed(1)+'%':''} green.oninput=roasted.oninput=lossCalc;
+likingScale.querySelectorAll('.tasteBtn').forEach(b=>b.onclick=()=>{S.liking=+b.dataset.v;likingScale.querySelectorAll('.tasteBtn').forEach(x=>x.classList.toggle('on',+x.dataset.v===S.liking))});
+flavorChips.querySelectorAll('.chip').forEach(b=>b.onclick=()=>b.classList.toggle('on'));
+function selectedFlavors(){return [...flavorChips.querySelectorAll('.chip.on')].map(b=>b.textContent.trim())}
+function nowSec(){return S.elapsed+(S.running?(Date.now()-S.lastStart)/1000:0)}
+function fmt(s){s=Math.max(0,Math.floor(s));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function tick(){let s=nowSec();timer.textContent=fmt(s);let slot=Math.floor(s/30)*30;if(s>=30 && !S.records.some(r=>r.t===slot)){let prev=S.records[S.records.length-1]||{};S.records.push({t:slot,temp:'',power:prev.power||'',fan:prev.fan||''});renderRecords(true)} draw()}
+start.onclick=()=>{if(!S.running){
+  // V5.4.24: Starting a roast from the basic-data flow always begins a NEW batch.
+  // This also guarantees the live roast rows are directly editable (no "修正" required)
+  // and prevents a stale loaded history ID from overwriting an older saved batch.
+  if(!S.roastStarted){
+    S.loadedHistory=false;
+    S.loadedId=null;
+    S.editRecords=false;
+    editRecords.classList.remove('on');
+    editRecords.textContent='修正';
+  }
+  if(!S.records.some(r=>r.t===0)){S.records.push({t:0,temp:chargeTemp.value||'',power:'',fan:'',charge:true});renderRecords(true)}
+  else renderRecords(true);
+  S.dropLocked=false;S.dirty=true;S.roastStarted=true;S.running=true;S.lastStart=Date.now();S.timer=setInterval(tick,500);draw()
+}};
+pause.onclick=()=>{if(S.running){S.elapsed=nowSec();S.running=false;clearInterval(S.timer);tick()}};
+function freezeTimerAt(sec){S.elapsed=Math.max(0,sec);S.running=false;S.dropLocked=true;clearInterval(S.timer);S.timer=null;timer.textContent=fmt(S.elapsed);analysis();draw()}
+function requireRoastStarted(){if(S.roastStarted||S.loadedHistory)return true;alert('請先開始烘焙');return false}
+function stopTimer(){if(S.running){S.elapsed=nowSec();S.running=false;clearInterval(S.timer);S.timer=null}timer.textContent=fmt(S.elapsed);analysis();draw()}
+function parseTimeInput(v,def){if(v==null)return null;v=String(v).trim();if(/^\d+:\d{1,2}$/.test(v)){let [m,s]=v.split(':').map(Number);return m*60+s}let n=Number(v);return Number.isFinite(n)?Math.max(0,Math.round(n)):def}
+function askMarkTemp(k,oldTemp){return new Promise(resolve=>{markTempTitle.textContent=names[k]+'溫度';markTempInput.value=oldTemp??'';markTempModal.classList.add('on');setTimeout(()=>markTempInput.focus(),60);const done=v=>{markTempModal.classList.remove('on');confirmMarkTemp.onclick=null;cancelMarkTemp.onclick=null;resolve(v)};confirmMarkTemp.onclick=()=>done(markTempInput.value);cancelMarkTemp.onclick=()=>done(null);markTempInput.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();done(markTempInput.value)}}})}
+async function setMark(k,correct=false,capturedTime=null){let old=S.marks[k];let t=capturedTime!=null?capturedTime:Math.round(nowSec());if(correct&&old){let tv=prompt(names[k]+'時間（mm:ss 或秒）：',fmt(old.t));if(tv===null)return;t=parseTimeInput(tv,old.t)}let v=await askMarkTemp(k,old?.temp??'');if(v===null){if(k==='drop'&&!old&&capturedTime!=null){S.marks[k]={t,temp:null};document.querySelector(`[data-key="${k}"]`).classList.add('hit');renderMarks();analysis();draw()}return}S.marks[k]={t,temp:v===''?null:+v};S.dirty=true;if(k==='drop')freezeTimerAt(t);document.querySelector(`[data-key="${k}"]`).classList.add('hit');renderMarks();analysis();draw()}
+document.querySelectorAll('.mark').forEach(b=>b.onclick=()=>{let k=b.dataset.key,correcting=S.editMarks&&!!S.marks[k];if(!correcting&&!requireRoastStarted())return;if(k==='drop'&&!correcting&&!S.marks.drop){const captured=Math.round(nowSec());freezeTimerAt(captured);setMark(k,false,captured)}else setMark(k,correcting)});
+if(editRecords) editRecords.onclick=()=>{if(!S.loadedHistory){alert('請先帶入歷史資料後再使用修正功能。');return}S.editRecords=!S.editRecords;editRecords.classList.toggle('on',S.editRecords);editRecords.textContent=S.editRecords?'完成修正':'修正';renderRecords()};
+editMarks.onclick=()=>{S.editMarks=!S.editMarks;editMarks.classList.toggle('on',S.editMarks);editMarks.textContent=S.editMarks?'完成修正':'修正';marksBox.classList.toggle('editing',S.editMarks)};
+function renderMarks(){markInfo.innerHTML=Object.entries(S.marks).sort((a,b)=>a[1].t-b[1].t).map(([k,v])=>`${names[k]} ${fmt(v.t)}${v.temp!=null?' / '+v.temp+'°C':''}`).join('　')||'尚未記錄關鍵點'}
+function deltaFor(i){let r=S.records[i];if(r.temp==='')return '';let target=S.records.find(x=>x.t===r.t-60);if(!target||target.temp==='')return '';return ((+r.temp)-(+target.temp)).toFixed(1)}
+function renderRecords(scrollBottom=false){
+ let shown=S.records.slice(); while(shown.length<3)shown.push(null); records.innerHTML='';
+ shown.forEach(r=>{
+  let d=document.createElement('div');d.className='row';
+  if(!r){d.innerHTML='<b class="small">--:--</b><div class="small" style="text-align:center">—</div><div class="small" style="text-align:center">—</div><div class="small" style="text-align:center">—</div><div class="delta">--</div>';d.style.opacity='.42';records.appendChild(d);return}
+  let i=S.records.indexOf(r);
+  d.innerHTML=`<b>${r.t===0?'入豆 '+fmt(r.t):fmt(r.t)}</b><input type="number" step="0.1" inputmode="decimal" value="${r.temp}" placeholder="豆溫"><input inputmode="decimal" value="${r.power}" placeholder="火力"><input inputmode="decimal" value="${r.fan}" placeholder="風力"><div class="delta">${deltaFor(i)||'--'}</div>`;
+  let ins=d.querySelectorAll('input');let locked=S.loadedHistory&&!S.editRecords;if(locked){d.classList.remove('editing');ins.forEach(x=>x.disabled=true)}else if(S.loadedHistory&&S.editRecords)d.classList.add('editing');['temp','power','fan'].forEach((k,j)=>ins[j].addEventListener('input',e=>{r[k]=e.target.value;S.dirty=true;d.querySelector('.delta').textContent=deltaFor(i)||'--';draw()}));
+  records.appendChild(d)
+ });
+ if(scrollBottom&&recordScroll)requestAnimationFrame(()=>recordScroll.scrollTop=recordScroll.scrollHeight)
+}
+function analysis(){
+ let total=(S.marks.drop?.t)||nowSec(), y=S.marks.yellow?.t, f=S.marks.fc?.t;
+ let dp=0,mp=0,vp=0;
+ if(y!=null){dp=total?(y/total*100):0;dry.textContent=fmt(y);dryP.textContent=total?dp.toFixed(1)+'%':'--'}else{dry.textContent=dryP.textContent='--'}
+ if(y!=null&&f!=null){mp=total?((f-y)/total*100):0;mai.textContent=fmt(f-y);maiP.textContent=total?mp.toFixed(1)+'%':'--'}else{mai.textContent=maiP.textContent='--'}
+ if(f!=null&&S.marks.drop){let z=S.marks.drop.t-f;vp=total?(z/total*100):0;dev.textContent=fmt(z);devP.textContent=total?vp.toFixed(1)+'%':'--'}else{dev.textContent=devP.textContent='--'}
+ phaseDry.style.width=dp+'%';phaseMai.style.width=mp+'%';phaseDev.style.width=vp+'%';
+}
+function batches(){try{return JSON.parse(localStorage.getItem('roastBatchesV2')||'[]')}catch(e){return[]}}
+function current(){return{id:S.loadedId||Date.now(),date:date.value,bean:bean.value,green:green.value,roasted:roasted.value,loss:loss.value,chargeTemp:chargeTemp.value,roastLevel:roastLevel.value,liking:S.liking,flavors:selectedFlavors(),tasteNote:tasteNote.value,favorite:favorite.checked,records:S.records,marks:S.marks}}
+function persistBatch(){
+ const x=JSON.parse(JSON.stringify(current()));
+ let a=batches(),i=a.findIndex(b=>String(b.id)===String(x.id));
+ if(i>=0)a[i]=x;else a.push(x);
+ const payload=JSON.stringify(a);
+ localStorage.setItem('roastBatchesV2',payload);
+ localStorage.setItem('roastLastBatchV43',JSON.stringify(x));
+ const verify=batches();
+ if(!verify.some(b=>String(b.id)===String(x.id)))throw new Error('手機儲存驗證失敗');
+ S.loadedId=x.id;S.loadedHistory=true;S.dirty=false;renderBatches();
+ return i>=0;
+}
+save.addEventListener('click',()=>{try{const updated=persistBatch();alert(updated?'✅ 本批紀錄已更新。':'✅ 本批完整紀錄已儲存，可到「歷史資料」查看。')}catch(e){console.error(e);alert('❌ 儲存失敗：'+(e&&e.message?e.message:'無法寫入手機儲存空間'))}});
+function batchId(b){return String(b?.id??'')}
+function batchLabel(b){return `${b.date||'未填日期'}｜${b.bean||'未命名'}`}
+function curveBatches(){return batches().filter(b=>Array.isArray(b.records)&&b.records.some(r=>r.temp!==''&&!isNaN(+r.temp)))}
+function refreshHistorySelectors(){
+ const all=batches().slice().reverse(), curves=curveBatches().slice().reverse();
+ const keepSearch=historySearch.value,keepLoad=loadHistory.value,keepRef=referenceBatch.value;
+ historySearch.innerHTML='<option value="">請選擇歷史資料</option>'+all.map(x=>`<option value="${batchId(x)}">${batchLabel(x)}</option>`).join('');
+ loadHistory.innerHTML='<option value="">請選擇批次</option>'+all.map(x=>`<option value="${batchId(x)}">${batchLabel(x)}</option>`).join('');
+ referenceBatch.innerHTML='<option value="">不使用參考曲線</option>'+curves.map(x=>`<option value="${batchId(x)}">${batchLabel(x)}</option>`).join('');
+ if([...historySearch.options].some(o=>o.value===keepSearch))historySearch.value=keepSearch;
+ if([...loadHistory.options].some(o=>o.value===keepLoad))loadHistory.value=keepLoad;
+ const wanted=S.referenceId!=null?String(S.referenceId):keepRef;
+ if(wanted&&[...referenceBatch.options].some(o=>o.value===wanted)){referenceBatch.value=wanted;S.referenceId=wanted}else if(wanted){S.referenceId=null;localStorage.removeItem('roastReferenceId')}
+}
+function renderBatches(){
+ const a=batches();refreshHistorySelectors();
+ batchList.innerHTML=a.length?a.map((x,i)=>({x,i})).reverse().slice(0,5).map(({x,i})=>`<label class="batchItem"><input class="delBatch" type="checkbox" data-index="${i}" value="${batchId(x)}"> <span>${x.favorite?'⭐ ':''}${batchLabel(x)}｜${x.loss||''}${x.liking?'｜喜好 '+x.liking+'/5':''}</span></label>`).join(''):'尚無資料';
+ const compOrder=[...S.comp];
+ compareList.innerHTML=a.length?a.slice().reverse().slice(0,5).map(x=>{let id=batchId(x),ci=compOrder.indexOf(id);return `<label class="compareItem ${ci>=0?'c'+(ci+1):''}"><input type="checkbox" value="${id}" ${ci>=0?'checked':''}> ${batchLabel(x)}</label>`}).join(''):'先儲存歷史資料後即可疊加比較。';
+ compareList.querySelectorAll('input').forEach(c=>c.onchange=()=>{if(c.checked){if(S.comp.size>=4){c.checked=false;alert('最多比較 4 個批次。');return}S.comp.add(c.value)}else S.comp.delete(c.value);renderBatches();draw()});
+ updateReferenceStatus();
+}
+function historyFiltered(){let q=historySearch.value,f=historyFilter.value;return batches().slice().reverse().filter(b=>{if(q&&batchId(b)!==String(q))return false;if(f==='favorite'&&!b.favorite)return false;if(f==='like4'&&(+b.liking||0)<4)return false;if(f==='light'&&!['淺焙','中淺焙'].includes(b.roastLevel))return false;if(f==='medium'&&b.roastLevel!=='中焙')return false;if(f==='dark'&&!['中深焙','深焙'].includes(b.roastLevel))return false;return true})}
+function phaseSummary(b){let y=b.marks?.yellow?.t,fc=b.marks?.fc?.t,drop=b.marks?.drop?.t;if(y==null||fc==null||drop==null||drop<=0)return '階段資料不足';let dtr=(drop-fc)/drop*100;return `轉黃 ${fmt(y)}｜一爆 ${fmt(fc)}｜下豆 ${fmt(drop)}｜DTR ${dtr.toFixed(1)}%`}
+function renderHistoryDb(){
+ let a=historyFiltered();
+ historyDbList.innerHTML=a.length?a.map(b=>`<div class="historyDbItem ${batchId(b)===String(S.historySelected??'')?'on':''}" data-id="${batchId(b)}"><b>${b.favorite?'⭐ ':''}${batchLabel(b)}</b></div>`).join(''):'<div class="historyDbItem">找不到符合條件的批次。</div>';
+ historyDbList.querySelectorAll('[data-id]').forEach(el=>el.onclick=()=>{S.historySelected=el.dataset.id;renderHistoryDb();renderHistoryDetail()});
+ if(S.historySelected&&!batches().some(b=>batchId(b)===String(S.historySelected)))S.historySelected=null;
+ if(!S.historySelected)historyDbDetail.innerHTML='<span class="small">點選上方一筆歷史資料即可查看完整內容。</span>';
+}
+function renderHistoryDetail(){let b=batches().find(x=>batchId(x)===String(S.historySelected));if(!b){historyDbDetail.innerHTML='<span class="small">請先選擇一個歷史批次。</span>';return}let flavors=(b.flavors||[]).join('、')||'未記錄',note=(b.tasteNote||'未記錄').replace(/</g,'&lt;').replace(/>/g,'&gt;');historyDbDetail.innerHTML=`<b>${b.favorite?'⭐ ':''}${b.date||''}｜${b.bean||'未命名'}</b><div class="detailGrid" style="margin-top:8px"><div><span>生豆／熟豆：</span>${b.green||'--'} / ${b.roasted||'--'} g</div><div><span>失重率：</span>${b.loss||'--'}</div><div><span>入豆溫：</span>${b.chargeTemp||'--'}°C</div><div><span>烘焙度：</span>${b.roastLevel||'--'}</div><div><span>喜好度：</span>${b.liking?b.liking+'/5':'--'}</div><div><span>風味：</span>${flavors}</div></div><div class="small" style="margin-top:8px">${phaseSummary(b)}</div><div style="margin-top:8px"><span class="small">飲用心得／下次調整</span><div>${note}</div></div><button id="sameBeanHistory" class="sameBeanBtn">只看同豆歷史</button><div class="detailActions"><button id="histRef">設為參考曲線</button><button id="histCompare">加入曲線比較</button><button id="histDelete" class="danger">刪除</button></div>`;
+ $('sameBeanHistory').onclick=()=>{let same=batches().slice().reverse().filter(x=>x.bean&&x.bean===b.bean);if(!same.length)return;historySearch.innerHTML='<option value="">請選擇同豆歷史資料</option>'+same.map(x=>`<option value="${x.id}">${x.date||'未填日期'}｜${x.bean||'未命名'}</option>`).join('');historySearch.value=batchId(b);S.historySelected=batchId(b);historyFilter.value='all';renderHistoryDb()};$('histRef').onclick=()=>{S.referenceId=batchId(b);localStorage.setItem('roastReferenceId',batchId(b));renderBatches();draw();alert('已設為參考曲線。')};$('histCompare').onclick=()=>{if(!S.comp.has(batchId(b))&&S.comp.size>=4){alert('最多比較 4 個批次。');return}S.comp.add(batchId(b));renderBatches();draw();alert('已加入曲線比較。')};$('histDelete').onclick=()=>{if(!confirm(`確定刪除「${b.date||''} ${b.bean||'未命名'}」？此動作無法復原。`))return;localStorage.setItem('roastBatchesV2',JSON.stringify(batches().filter(x=>x.id!==b.id)));S.comp.delete(batchId(b));if(String(S.referenceId)===batchId(b)){S.referenceId=null;localStorage.removeItem('roastReferenceId')}S.historySelected=null;renderBatches();renderHistoryDb();draw()}}
+function applyBasic(b){date.value=b.date||date.value;bean.value=b.bean||'';green.value=b.green||'';roasted.value=b.roasted||'';loss.value=b.loss||'';chargeTemp.value=b.chargeTemp||''}
+function applyRoast(b){S.loadedId=b.id||null;S.running=false;S.roastStarted=true;clearInterval(S.timer);S.loadedHistory=true;S.dropLocked=!!b.marks?.drop;S.editRecords=false;S.editMarks=false;editRecords.classList.remove('on');editMarks.classList.remove('on');editRecords.textContent='修正';editMarks.textContent='修正';marksBox.classList.remove('editing');S.records=JSON.parse(JSON.stringify(b.records||[]));S.marks=JSON.parse(JSON.stringify(b.marks||{}));S.elapsed=Math.max(0,S.marks.drop?.t||0,...S.records.map(r=>+r.t||0));timer.textContent=fmt(S.elapsed);renderRecords();renderMarks();analysis();document.querySelectorAll('.mark').forEach(x=>x.classList.toggle('hit',!!S.marks[x.dataset.key]));draw()}
+function applyResult(b){roastLevel.value=b.roastLevel||'';S.liking=+b.liking||0;likingScale.querySelectorAll('.tasteBtn').forEach(x=>x.classList.toggle('on',+x.dataset.v===S.liking));let fs=new Set(b.flavors||[]);flavorChips.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',fs.has(x.textContent.trim())));tasteNote.value=b.tasteNote||'';favorite.checked=!!b.favorite}
+loadHistoryBtn.onclick=()=>{
+ const wanted=String(loadHistory.value||'');
+ const all=batches();
+ const b=all.find(x=>batchId(x)===wanted);
+ if(!wanted){alert('請先選擇要帶入的歷史批次。');return}
+ if(!b){refreshHistorySelectors();alert('找不到選取的歷史批次，請重新選擇。');return}
+ const names2={all:'全部資料',basic:'基本資料',roast:'烘焙記錄',result:'烘焙成果'},scope=loadScope.value||'all';
+ loadHistoryBtn.disabled=true;loadHistoryBtn.textContent='帶入中…';
+ try{
+  if(scope==='all'||scope==='basic')applyBasic(b);
+  if(scope==='all'||scope==='roast')applyRoast(b);
+  if(scope==='all'||scope==='result')applyResult(b);
+  S.loadedId=b.id??null;S.loadedHistory=true;S.dirty=false;
+  renderBatches();analysis();draw();historyModal.classList.remove('on');
+  page(scope==='roast'||scope==='all'?'roast':'info');
+  setTimeout(()=>alert(`✅ ${names2[scope]}已帶入：${b.date||''} ${b.bean||'未命名'}`),80);
+ }catch(e){console.error(e);alert('❌ 帶入歷史資料失敗：'+(e&&e.message?e.message:'未知錯誤'))}
+ finally{loadHistoryBtn.disabled=false;loadHistoryBtn.textContent='帶入選擇資料'}
+};
+function deleteCheckedBatches(){
+ const checked=[...document.querySelectorAll('#batchList .delBatch:checked')];
+ if(!checked.length){alert('請先勾選要刪除的歷史資料。');return}
+ if(!confirm(`確定刪除勾選的 ${checked.length} 筆歷史資料？此動作無法復原。`))return;
+ try{
+  const before=batches();
+  const indexes=new Set(checked.map(c=>Number(c.dataset.index)).filter(Number.isInteger));
+  if(!indexes.size)throw new Error('無法取得勾選資料的位置');
+  const removed=before.filter((_,i)=>indexes.has(i));
+  const keep=before.filter((_,i)=>!indexes.has(i));
+  localStorage.setItem('roastBatchesV2',JSON.stringify(keep));
+  const after=batches();
+  if(after.length!==keep.length)throw new Error('手機儲存驗證失敗');
+  const removedIds=new Set(removed.map(batchId));
+  removedIds.forEach(id=>S.comp.delete(id));
+  if(S.referenceId!=null&&removedIds.has(String(S.referenceId))){S.referenceId=null;localStorage.removeItem('roastReferenceId')}
+  if(S.historySelected!=null&&removedIds.has(String(S.historySelected)))S.historySelected=null;
+  renderBatches();renderHistoryDb();draw();
+  alert(`✅ 已刪除 ${before.length-after.length} 筆歷史資料。`);
+ }catch(e){console.error(e);alert('❌ 刪除失敗：'+(e&&e.message?e.message:'未知錯誤'))}
+}
+// V5.4.20: WebView-safe delegated delete binding.
+// The history list is re-rendered dynamically, so listen at document level in capture phase.
+document.addEventListener('click',function(e){
+ const btn=e.target&&e.target.closest?e.target.closest('#deleteSelected'):null;
+ if(btn===deleteSelected){
+  e.preventDefault();
+  deleteCheckedBatches();
+ }
+},true);
+backupData.onclick=()=>{let history=batches();if(!history.length){alert('目前沒有歷史烘焙資料可備份。');return}backupData.disabled=true;backupData.textContent='備份中…';let now=new Date(),stamp=`${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}_${String(now.getHours()).padStart(2,'0')}${String(now.getMinutes()).padStart(2,'0')}`,data={app:'烘豆記錄',type:'history-backup',version:'5.4.25-web',exportedAt:now.toISOString(),batches:history},json=JSON.stringify(data,null,2),name=`烘焙歷史備份_${stamp}.json`;if(window.AndroidApp&&AndroidApp.saveHistoryBackup){AndroidApp.saveHistoryBackup(name,json);return}downloadBlob(new Blob([json],{type:'application/json;charset=utf-8'}),name);backupData.disabled=false;backupData.textContent='備份資料'};
+window.onHistoryBackupResult=(ok,msg)=>{backupData.disabled=false;backupData.textContent='備份資料';alert(ok?`✅ 歷史烘焙資料備份完成\n${msg}\n已存到 Download/CoffeeRoast`:`❌ 備份失敗：${msg}`)};
+restoreData.onclick=()=>{if(window.AndroidApp&&AndroidApp.pickBackup){AndroidApp.pickBackup();return}restoreFile.click()};restoreFile.onchange=async()=>{let f=restoreFile.files[0];if(!f)return;try{let data=JSON.parse(await f.text()),arr=Array.isArray(data)?data:data.batches;if(!Array.isArray(arr))throw 0;if(!confirm(`備份檔共有 ${arr.length} 筆歷史資料。確定還原並取代目前歷史資料？`))return;localStorage.setItem('roastBatchesV2',JSON.stringify(arr));S.comp.clear();renderBatches();draw();alert('資料還原完成。')}catch(e){alert('無法讀取這個備份檔。')}finally{restoreFile.value=''}};
+window.onBackupPicked=(json)=>{try{const data=JSON.parse(json),arr=Array.isArray(data)?data:data&&data.batches;if(!Array.isArray(arr))throw new Error('備份格式不正確');if(!confirm(`備份檔共有 ${arr.length} 筆歷史資料。確定還原並取代目前歷史資料？`))return;localStorage.setItem('roastBatchesV2',JSON.stringify(arr));const verify=batches();if(verify.length!==arr.length)throw new Error('還原後資料筆數驗證失敗');S.comp.clear();S.historySelected=null;S.referenceId=null;localStorage.removeItem('roastReferenceId');refreshHistorySelectors();renderBatches();renderHistoryDb();draw();alert(`✅ 還原完成，共 ${verify.length} 筆歷史資料。`)}catch(e){console.error(e);alert('❌ 還原失敗：'+(e&&e.message?e.message:'無法讀取這個備份檔'))}};
+window.onNativeFileSaved=(ok,msg)=>alert(ok?'✅ '+msg:'❌ '+msg);
+showRor.onchange=draw;
+
+function refBatch(){return batches().find(b=>batchId(b)===String(S.referenceId??''))||null}
+function refTempAt(t,b){let p=(b?.records||[]).filter(r=>r.temp!==''&&!isNaN(+r.temp)).sort((a,c)=>a.t-c.t);if(!p.length)return null;if(t<=p[0].t)return +p[0].temp;if(t>=p[p.length-1].t)return +p[p.length-1].temp;for(let i=1;i<p.length;i++)if(t<=p[i].t){let a=p[i-1],c=p[i],q=(t-a.t)/(c.t-a.t||1);return +a.temp+(+c.temp-+a.temp)*q}return null}
+function updateReferenceStatus(){let b=refBatch();if(!b){referenceStatus.textContent='尚未設定參考批次。';return}let cur=S.records.filter(r=>r.temp!==''&&!isNaN(+r.temp)).slice(-1)[0],txt=`參考：${b.date||''}｜${b.bean||'未命名'}`;if(cur){let rt=refTempAt(cur.t,b);if(rt!=null){let d=+cur.temp-rt;txt+=`　目前 ${fmt(cur.t)}：${d>=0?'+':''}${d.toFixed(1)}°C ${d>0?'（高於參考）':d<0?'（低於參考）':'（與參考相同）'}`}}referenceStatus.innerHTML=txt}
+referenceBatch.onchange=()=>{S.referenceId=referenceBatch.value||null;if(S.referenceId)localStorage.setItem('roastReferenceId',S.referenceId);else localStorage.removeItem('roastReferenceId');updateReferenceStatus();draw()};
+clearReference.onclick=()=>{S.referenceId=null;localStorage.removeItem('roastReferenceId');referenceBatch.value='';updateReferenceStatus();draw()};
+
+newBatch.onclick=()=>{S.elapsed=0;S.running=false;S.roastStarted=false;S.dropLocked=false;S.dirty=false;S.loadedHistory=false;S.loadedId=null;S.editRecords=false;S.editMarks=false;editRecords.classList.remove('on');editMarks.classList.remove('on');editRecords.textContent='修正';editMarks.textContent='修正';marksBox.classList.remove('editing');clearInterval(S.timer);S.records=[];S.marks={};bean.value=green.value=roasted.value=loss.value=chargeTemp.value='';roastLevel.value='';tasteNote.value='';favorite.checked=false;S.liking=0;likingScale.querySelectorAll('.tasteBtn').forEach(x=>x.classList.remove('on'));flavorChips.querySelectorAll('.chip').forEach(x=>x.classList.remove('on'));syncStickyOffset();
+date.value=new Date().toISOString().slice(0,10);timer.textContent='00:00';renderRecords();renderMarks();analysis();document.querySelectorAll('.mark').forEach(x=>x.classList.remove('hit'));draw();page('info');alert('✅ 已建立新批次。')}
+exportBtn.onclick=()=>{
+ const checked=[...batchList.querySelectorAll('.delBatch:checked')];
+ let source=null;
+ if(checked.length){
+  if(checked.length>1){alert('請一次勾選一筆歷史資料匯出 CSV。');return}
+  const idx=Number(checked[0].dataset.index),all=batches();
+  source=Number.isInteger(idx)&&idx>=0&&idx<all.length?all[idx]:null;
+  if(!source){alert('找不到勾選的歷史資料，請重新勾選後再試。');return}
+ }else{
+  source=current();
+ }
+ const recs=Array.isArray(source.records)?source.records:[];
+ if(!recs.length){alert('這筆資料沒有烘焙紀錄可匯出。');return}
+ exportBtn.disabled=true;exportBtn.textContent='匯出中…';
+ const csvDelta=i=>{let r=recs[i];if(r.temp==='')return '';let target=recs.find(x=>x.t===r.t-60);if(!target||target.temp==='')return '';return ((+r.temp)-(+target.temp)).toFixed(1)};
+ let rows=[['時間','豆溫','火力','風力','溫差/分']];
+ recs.forEach((r,i)=>rows.push([fmt(r.t),r.temp,r.power,r.fan,csvDelta(i)]));
+ let csv='\ufeff'+rows.map(r=>r.join(',')).join('\n'),name=`烘焙_${source.date||date.value||'未填日期'}_${safeFileName(source.bean||'未命名')}.csv`;
+ if(window.AndroidApp&&AndroidApp.saveCsvExport){AndroidApp.saveCsvExport(name,csv);return}
+ downloadBlob(new Blob([csv],{type:'text/csv;charset=utf-8'}),name);exportBtn.disabled=false;exportBtn.textContent='匯出 CSV'
+}
+window.onCsvExportResult=(ok,msg)=>{exportBtn.disabled=false;exportBtn.textContent='匯出 CSV';alert(ok?`✅ CSV 匯出完成\n${msg}\n已存到 Download/CoffeeRoast`:`❌ CSV 匯出失敗：${msg}`)};
+
+function safeFileName(v){return String(v||'未命名').replace(/[\/:*?"<>|]/g,'_').trim()||'未命名'}
+function markText(k){let m=S.marks[k];return m?`${names[k]} ${fmt(m.t)}${m.temp!=null?' / '+(+m.temp).toFixed(1).replace('.0','')+'°C':''}`:`${names[k]} --`}
+function makeCurveShareCanvas(){
+ draw();
+ const W=1200,H=900,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+ g.fillStyle='#fffdf8';g.fillRect(0,0,W,H);g.fillStyle='#2f261f';g.font='bold 42px sans-serif';g.fillText('☕ 咖啡烘焙紀錄',55,70);
+ g.font='bold 30px sans-serif';g.fillText(bean.value||'未命名咖啡豆',55,120);g.font='22px sans-serif';g.fillStyle='#766a60';
+ g.fillText(`${date.value||''}　生豆 ${green.value||'--'}g　熟豆 ${roasted.value||'--'}g　失重率 ${loss.value||'--'}`,55,158);
+ g.fillText(`入豆溫 ${chargeTemp.value||'--'}°C　總時間 ${fmt(S.marks.drop?.t||S.elapsed||0)}　烘焙度 ${roastLevel.value||'--'}　喜好 ${S.liking?S.liking+'/5':'--'}`,55,192);
+ // 將目前畫面上的完整曲線（含 RoR、參考與比較曲線）放入分享圖。
+ g.fillStyle='#fff';g.fillRect(55,225,1090,400);g.strokeStyle='#dccfc1';g.strokeRect(55,225,1090,400);g.drawImage(chart,0,0,chart.width,chart.height,70,240,1060,370);
+ g.fillStyle='#2f261f';g.font='bold 23px sans-serif';g.fillText('關鍵點',55,675);g.font='20px sans-serif';g.fillStyle='#59483c';
+ const mt=[markText('turn'),markText('yellow'),markText('fc'),markText('sc'),markText('drop')];
+ mt.forEach((t,i)=>g.fillText(t,55+(i%3)*365,710+Math.floor(i/3)*36));
+ g.font='bold 23px sans-serif';g.fillStyle='#2f261f';g.fillText('烘焙階段',55,795);g.font='20px sans-serif';g.fillStyle='#59483c';
+ g.fillText(`乾燥期 ${dry.textContent} ${dryP.textContent}　｜　梅納反應期 ${mai.textContent} ${maiP.textContent}　｜　發展期 DTR ${dev.textContent} ${devP.textContent}`,55,830);
+ const fs=[...flavorChips.querySelectorAll('.chip.on')].map(x=>x.textContent.trim());if(fs.length){g.fillText(`飲用感受：${fs.join('、')}`,55,866)}
+ return c
+}
+function curveImageBlob(){return new Promise((resolve,reject)=>{try{const c=makeCurveShareCanvas();if(!c.toBlob){const data=c.toDataURL('image/png');fetch(data).then(r=>r.blob()).then(resolve,reject);return}c.toBlob(b=>b?resolve(b):reject(new Error('PNG 產生失敗')),'image/png')}catch(e){reject(e)}})}
+function blobDataUrl(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(blob)})}
+function downloadBlob(blob,name){
+ const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.rel='noopener';a.style.display='none';document.body.appendChild(a);a.click();setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},8000)
+}
+async function shareImageBlob(blob,name,text){
+ const file=new File([blob],name,{type:'image/png'});
+ if(navigator.share && (!navigator.canShare || navigator.canShare({files:[file]}))){await navigator.share({title:'烘豆記錄',text,files:[file]});return true}
+ return false
+}
+let curveSaveBusy=false,curveShareBusy=false;
+window.onCurveSaveResult=(ok,msg)=>{curveSaveBusy=false;saveCurveImage.disabled=false;if(ok){saveCurveImage.textContent='曲線儲存完畢';setTimeout(()=>{if(!curveSaveBusy)saveCurveImage.textContent='儲存曲線'},2000)}else{saveCurveImage.textContent='儲存曲線';alert('❌ 儲存曲線圖片失敗：'+(msg||'未知錯誤'))}};
+window.onCurveShareResult=(ok,msg)=>{curveShareBusy=false;shareCurveImage.disabled=false;shareCurveImage.textContent='分享曲線';if(!ok)alert('❌ 分享失敗：'+(msg||'未知錯誤'))};
+saveCurveImage.addEventListener('click',async()=>{
+ if(curveSaveBusy)return;curveSaveBusy=true;saveCurveImage.disabled=true;saveCurveImage.textContent='儲存中…';
+ try{const blob=await curveImageBlob(),name=`烘焙曲線_${date.value||''}_${safeFileName(bean.value)}.png`;if(window.AndroidApp&&AndroidApp.saveImageAsync){AndroidApp.saveImageAsync(name,await blobDataUrl(blob));return}downloadBlob(blob,name);window.onCurveSaveResult(true,'曲線圖片已送出下載')}catch(e){console.error(e);window.onCurveSaveResult(false,e&&e.message?e.message:'未知錯誤')}
+});
+shareCurveImage.addEventListener('click',async()=>{
+ if(curveShareBusy)return;curveShareBusy=true;shareCurveImage.disabled=true;shareCurveImage.textContent='準備分享…';
+ try{const blob=await curveImageBlob(),name=`烘焙曲線_${date.value||''}_${safeFileName(bean.value)}.png`,text=`${date.value||''} ${bean.value||'未命名'}｜總時間 ${fmt(S.marks.drop?.t||S.elapsed||0)}｜失重率 ${loss.value||'--'}`;if(window.AndroidApp&&AndroidApp.shareImageAsync){AndroidApp.shareImageAsync(name,await blobDataUrl(blob),text);return}if(await shareImageBlob(blob,name,text))window.onCurveShareResult(true,'');else{downloadBlob(blob,name);window.onCurveShareResult(true,'')}}catch(e){console.error(e);window.onCurveShareResult(false,e&&e.message?e.message:'未知錯誤')}
+});
+
+function draw(){
+ let c=chart,rect=c.getBoundingClientRect(),dpr=devicePixelRatio||1;c.width=rect.width*dpr;c.height=280*dpr;let x=c.getContext('2d');x.scale(dpr,dpr);
+ let W=rect.width,H=280,L=45,R=12,T=24,B=38;x.clearRect(0,0,W,H),compared=[...S.comp].map(id=>batches().find(b=>batchId(b)===String(id))).filter(Boolean).slice(0,4),reference=refBatch();
+ let all=[...S.records,...compared.flatMap(b=>b.records||[]),...(reference?.records||[])].filter(r=>r.temp!==''&&!isNaN(+r.temp));
+ let maxT=Math.ceil(Math.max(300,nowSec(),...all.map(r=>r.t))/30)*30,temps=all.map(r=>+r.temp),minV=Math.floor((Math.min(100,...temps)-10)/10)*10,maxV=Math.ceil((Math.max(220,...temps)+10)/10)*10;
+ let X=t=>L+t/maxT*(W-L-R),Y=v=>T+(maxV-v)/(maxV-minV)*(H-T-B);x.font='10px sans-serif';x.lineWidth=1;
+ for(let v=minV;v<=maxV;v+=10){let y=Y(v);x.strokeStyle='#e7dfd7';x.beginPath();x.moveTo(L,y);x.lineTo(W-R,y);x.stroke();x.fillStyle='#766a60';x.fillText(v+'°',3,y+3)}
+ for(let t=0;t<=maxT;t+=30){let xx=X(t);x.strokeStyle='#eee8e2';x.beginPath();x.moveTo(xx,T);x.lineTo(xx,H-B);x.stroke();x.fillStyle='#766a60';x.save();x.translate(xx,H-5);x.rotate(-Math.PI/4);x.fillText(fmt(t),0,0);x.restore()}
+ function line(rs,w,color){let p=rs.filter(r=>r.temp!==''&&!isNaN(+r.temp));if(!p.length)return;x.beginPath();p.forEach((r,i)=>i?x.lineTo(X(r.t),Y(+r.temp)):x.moveTo(X(r.t),Y(+r.temp)));x.lineWidth=w;x.strokeStyle=color;x.stroke()}
+ const compareColors=['#d32f2f','#1976d2','#2e7d32','#ef6c00'];
+ compared.forEach((b,i)=>line(b.records||[],2,compareColors[i]));if(reference){x.save();x.setLineDash([9,5]);line(reference.records||[],2.6,'#00838f');x.restore()}line(S.records,3,'#7a4d2d');updateReferenceStatus();
+ // RoR：以前60秒豆溫差計算（°C/分），以3點移動平均平滑；紫色虛線。
+ const rawRor=S.records.map((r,i)=>({t:r.t,v:parseFloat(deltaFor(i))})).filter(p=>Number.isFinite(p.v));
+ const rorPts=rawRor.map((p,i)=>{let q=rawRor.slice(Math.max(0,i-2),i+1);return{t:p.t,v:q.reduce((a,b)=>a+b.v,0)/q.length}});
+ rorNow.textContent=rorPts.length?rorPts[rorPts.length-1].v.toFixed(1)+' °C/min':'--';
+ if(showRor.checked&&rorPts.length){
+   const minR=0,maxR=40,spanR=40, RY=v=>T+(maxR-Math.max(minR,Math.min(maxR,v)))/spanR*(H-T-B);
+   x.font='10px sans-serif';x.fillStyle='#6a1b9a';x.fillText('RoR',W-R-24,T-7);
+   for(let v=minR;v<=maxR;v+=5){let y=RY(v);x.fillStyle='#6a1b9a';x.textAlign='right';x.fillText(v,W-R,y+3)}x.textAlign='left';
+   x.save();x.setLineDash([7,5]);x.beginPath();rorPts.forEach((p,i)=>i?x.lineTo(X(p.t),RY(p.v)):x.moveTo(X(p.t),RY(p.v)));x.lineWidth=2.2;x.strokeStyle='#6a1b9a';x.stroke();x.restore();
+ }
+ // 入豆點：固定取 00:00 與基本資料的入豆溫
+ if(chargeTemp.value!==''&&!isNaN(+chargeTemp.value)){
+   let temp=+chargeTemp.value,xx=X(0),yy=Y(temp),txt=`入豆 00:00 ${temp.toFixed(1).replace('.0','')}°C`;
+   x.font='10px sans-serif';let tw=x.measureText(txt).width+10,th=18,tx=L+4,ty=Math.max(T+th,yy-30);
+   x.strokeStyle='#9a8777';x.lineWidth=1;x.beginPath();x.moveTo(xx,yy);x.lineTo(xx,ty);x.stroke();
+   x.fillStyle='#2f261f';x.beginPath();x.arc(xx,yy,3.5,0,Math.PI*2);x.fill();
+   x.fillStyle='#fff8ee';x.fillRect(tx,ty-th,tw,th);x.strokeStyle='#bda997';x.strokeRect(tx,ty-th,tw,th);
+   x.fillStyle='#3a2d24';x.fillText(txt,tx+5,ty-5)
+ }
+ // 關鍵點固定依烘焙流程繪製；每一個已記錄的點都必須出現在曲線上。
+ const markOrder=['turn','yellow','fc','sc','drop'];
+ const placed=[];
+ function overlap(a,b){return !(a.r<b.l||a.l>b.r||a.b<b.t||a.t>b.b)}
+ markOrder.forEach((k,i)=>{
+  const m=S.marks[k]; if(!m)return;
+  let temp=m.temp;
+  if(temp==null){let q=S.records.filter(r=>r.temp!==''&&!isNaN(+r.temp)).sort((a,b)=>Math.abs(a.t-m.t)-Math.abs(b.t-m.t))[0];temp=q?+q.temp:null}
+  if(temp==null||isNaN(+temp))return;
+  let xx=X(m.t),yy=Y(+temp),txt=`${names[k]} ${fmt(m.t)} ${(+temp).toFixed(1).replace('.0','')}°C`;
+  x.font='10px sans-serif';let tw=x.measureText(txt).width+10,th=18;
+  // 優先上下交錯；若與既有標籤碰撞，就逐級往外移，確保一爆等標籤不被蓋掉。
+  let dirs=(i%2===0)?[-1,1]:[1,-1],chosen=null;
+  for(const dir of dirs){
+   for(const dist of [30,50,70,90]){
+    let tx=Math.min(W-R-tw,Math.max(L,xx-tw/2));
+    let top=dir<0?yy-dist-th:yy+dist;
+    top=Math.min(H-B-th-2,Math.max(T+2,top));
+    let box={l:tx,t:top,r:tx+tw,b:top+th};
+    if(!placed.some(p=>overlap(box,p))){chosen={tx,top,box};break}
+   }
+   if(chosen)break
+  }
+  if(!chosen){let tx=Math.min(W-R-tw,Math.max(L,xx-tw/2)),top=Math.min(H-B-th-2,Math.max(T+2,yy+(i%2?34:-52)));chosen={tx,top,box:{l:tx,t:top,r:tx+tw,b:top+th}}}
+  placed.push(chosen.box);
+  let anchorY=chosen.top>yy?chosen.top:chosen.top+th;
+  x.strokeStyle='#9a8777';x.lineWidth=1;x.beginPath();x.moveTo(xx,yy);x.lineTo(xx,anchorY);x.stroke();
+  x.fillStyle='#2f261f';x.beginPath();x.arc(xx,yy,3.5,0,Math.PI*2);x.fill();
+  x.fillStyle='#fff8ee';x.fillRect(chosen.tx,chosen.top,tw,th);x.strokeStyle='#bda997';x.strokeRect(chosen.tx,chosen.top,tw,th);x.fillStyle='#3a2d24';x.fillText(txt,chosen.tx+5,chosen.top+13)
+ })
+}
+
+// 未儲存保護與明確退出機制 V5.4：所有退出統一交由 Android Activity。
+const exitApp=$('exitApp'),exitModal=$('exitModal'),exitMessage=$('exitMessage'),stayApp=$('stayApp'),saveAndExit=$('saveAndExit'),discardAndExit=$('discardAndExit');
+function hasUnsavedWork(){return S.dirty||S.running}
+function showExitDialog(){exitMessage.textContent=hasUnsavedWork()?'本次烘焙尚未儲存。要先儲存再離開嗎？':'確定要離開烘焙紀錄？';saveAndExit.style.display=hasUnsavedWork()?'inline-block':'none';discardAndExit.textContent=hasUnsavedWork()?'放棄並離開':'確定離開';exitModal.classList.add('on')}
+function closeExitDialog(){exitModal.classList.remove('on')}
+function leaveApp(){S.allowExit=true;exitModal.classList.remove('on');clearInterval(S.timer);S.running=false;if(window.AndroidApp&&AndroidApp.exitApp){AndroidApp.exitApp();return}page('info');window.scrollTo({top:0,behavior:'smooth'})}
+window.requestAppExit=()=>showExitDialog();
+window.handleAndroidBack=()=>{
+  // Back closes the top dialog first instead of leaving the app.
+  if(exitModal.classList.contains('on')){closeExitDialog();return}
+  if(markTempModal.classList.contains('on')){markTempModal.classList.remove('on');return}
+  if(historyDbModal.classList.contains('on')){historyDbModal.classList.remove('on');return}
+  if(historyModal.classList.contains('on')){historyModal.classList.remove('on');return}
+  // From roasting page, Back returns to Basic Data first.
+  if(roast.classList.contains('on')){page('info');return}
+  // Only at the top level do we ask whether to leave.
+  showExitDialog();
+};
+exitApp.onclick=window.requestAppExit;stayApp.onclick=closeExitDialog;
+saveAndExit.onclick=()=>{try{persistBatch();S.dirty=false;leaveApp()}catch(e){alert('❌ 儲存失敗，尚未離開：'+(e&&e.message?e.message:'未知錯誤'))}};
+discardAndExit.onclick=()=>{S.dirty=false;leaveApp()};
+['date','bean','green','roasted','chargeTemp','roastLevel','tasteNote','favorite'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',()=>S.dirty=true);el.addEventListener('change',()=>S.dirty=true)}});
+likingScale.addEventListener('click',()=>S.dirty=true);flavorChips.addEventListener('click',()=>S.dirty=true);
+
+window.addEventListener('resize',draw);renderBatches();renderRecords();analysis();draw();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol==='https:' || location.hostname==='localhost')) {
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(console.error));
+}
+</script>
+</body></html>
