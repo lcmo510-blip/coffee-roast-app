@@ -436,18 +436,25 @@ likingScale.addEventListener('click',()=>S.dirty=true);flavorChips.addEventListe
 // Web V5.4.26：Web 專用導覽、退出畫面與按鈕按壓回饋；不改共用功能配置。
 const exitScreen=$('exitScreen'),reenterApp=$('reenterApp'),leavePage=$('leavePage'),leavePageHint=$('leavePageHint');
 let webEntryHistoryLength=history.length;
-reenterApp.onclick=()=>{S.allowExit=false;leavePageHint.style.display='none';exitScreen.classList.remove('on');document.querySelector('header').style.display='flex';document.querySelector('main').style.display='block';page('info');window.scrollTo(0,0);if(!window.AndroidApp)history.pushState({coffeeRoastGuard:true},'',location.href)};
+reenterApp.onclick=()=>{S.allowExit=false;leavePageHint.style.display='none';exitScreen.classList.remove('on');document.querySelector('header').style.display='flex';document.querySelector('main').style.display='block';page('info');window.scrollTo(0,0);if(!window.AndroidApp)armWebBackGuard()};
 leavePage.onclick=()=>{S.allowExit=true;leavePageHint.style.display='none';if(window.AndroidApp&&AndroidApp.exitApp){AndroidApp.exitApp();return}if(webEntryHistoryLength>1){history.go(-2);setTimeout(()=>{if(document.visibilityState==='visible'){leavePageHint.style.display='block'}},700)}else{leavePageHint.style.display='block'}};
 document.addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(b)b.classList.add('pressed')},{passive:true});
 document.addEventListener('pointerup',e=>{const b=e.target.closest('button');if(b)b.classList.remove('pressed')},{passive:true});
 document.addEventListener('pointercancel',()=>document.querySelectorAll('button.pressed').forEach(b=>b.classList.remove('pressed')),{passive:true});
+function armWebBackGuard(){
+  if(window.AndroidApp)return;
+  const cleanUrl=location.pathname+location.search;
+  history.replaceState({coffeeRoastBase:true},'',cleanUrl);
+  history.pushState({coffeeRoastGuard:true},'',cleanUrl+'#roast-back-guard');
+}
 if(!window.AndroidApp){
-  history.replaceState({coffeeRoastBase:true},'',location.href);
-  history.pushState({coffeeRoastGuard:true},'',location.href);
+  armWebBackGuard();
   window.addEventListener('popstate',()=>{
     if(S.allowExit)return;
     window.handleAndroidBack();
-    history.pushState({coffeeRoastGuard:true},'',location.href);
+    setTimeout(()=>{
+      if(!S.allowExit)history.pushState({coffeeRoastGuard:true},'',location.pathname+location.search+'#roast-back-guard');
+    },0);
   });
 }
 
