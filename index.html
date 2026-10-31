@@ -441,20 +441,69 @@ leavePage.onclick=()=>{S.allowExit=true;leavePageHint.style.display='none';if(wi
 document.addEventListener('pointerdown',e=>{const b=e.target.closest('button');if(b)b.classList.add('pressed')},{passive:true});
 document.addEventListener('pointerup',e=>{const b=e.target.closest('button');if(b)b.classList.remove('pressed')},{passive:true});
 document.addEventListener('pointercancel',()=>document.querySelectorAll('button.pressed').forEach(b=>b.classList.remove('pressed')),{passive:true});
+// Web V5.4.26：Samsung / Android 瀏覽器返回鍵雙層保護
+let webBackHandling=false;
+
 function armWebBackGuard(){
   if(window.AndroidApp)return;
+
   const cleanUrl=location.pathname+location.search;
-  history.replaceState({coffeeRoastBase:true},'',cleanUrl);
-  history.pushState({coffeeRoastGuard:true},'',cleanUrl+'#roast-back-guard');
+
+  // 建立兩層同頁歷史紀錄，避免 Samsung 返回鍵一次直接離開網站
+  history.replaceState(
+    {coffeeRoastBase:true},
+    '',
+    cleanUrl+'#roast-base'
+  );
+
+  history.pushState(
+    {coffeeRoastGuard1:true},
+    '',
+    cleanUrl+'#roast-guard-1'
+  );
+
+  history.pushState(
+    {coffeeRoastGuard2:true},
+    '',
+    cleanUrl+'#roast-guard-2'
+  );
 }
+
+function restoreWebBackGuard(){
+  if(window.AndroidApp || S.allowExit)return;
+
+  const cleanUrl=location.pathname+location.search;
+
+  history.pushState(
+    {coffeeRoastGuard2:true},
+    '',
+    cleanUrl+'#roast-guard-2'
+  );
+}
+
 if(!window.AndroidApp){
+
   armWebBackGuard();
+
   window.addEventListener('popstate',()=>{
+
     if(S.allowExit)return;
+    if(webBackHandling)return;
+
+    webBackHandling=true;
+
+    // 先把使用者留在烘豆記錄內
+    restoreWebBackGuard();
+
+    // 再執行原本的返回邏輯：
+    // 烘焙記錄 → 基本資料
+    // 基本資料 → 顯示退出確認
     window.handleAndroidBack();
+
     setTimeout(()=>{
-      if(!S.allowExit)history.pushState({coffeeRoastGuard:true},'',location.pathname+location.search+'#roast-back-guard');
-    },0);
+      webBackHandling=false;
+    },300);
+
   });
 }
 
